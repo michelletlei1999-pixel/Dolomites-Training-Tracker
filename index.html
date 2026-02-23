@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dolomites Hike">
+<title>Dolomites Training Tracker</title>
+<style>
+  :root {
+    --green: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --green-mid: #40916c;
+    --sky: #4895ef;
+    --sky-pale: #caf0f8;
+    --orange: #e76f51;
+    --orange-pale: #fde8df;
+    --yellow: #f4a261;
+    --yellow-pale: #fef3e2;
+    --gray: #6c757d;
+    --gray-light: #f8f9fa;
+    --gray-mid: #dee2e6;
+    --white: #ffffff;
+    --dark: #212529;
+    --radius: 14px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 24px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f4f0;
+    color: var(--dark);
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--gray-mid);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0 8px;
+    border: none; background: none; cursor: pointer;
+    font-size: 10px; color: var(--gray);
+    gap: 3px; transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--green); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* HEADER */
+  .header {
+    background: url('dolomites.jpg') center 40% / cover no-repeat;
+    color: white;
+    padding: 52px 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Dark overlay so text stays readable */
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0.35) 0%,
+      rgba(0,0,0,0.25) 50%,
+      rgba(0,0,0,0.45) 100%);
+    z-index: 1;
+  }
+
+  /* Text sits above overlay */
+  .header-text { position: relative; z-index: 2; }
+  .header-title { font-size: 22px; font-weight: 700; }
+  .header-sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+  .countdown-row {
+    display: flex; gap: 12px; margin-top: 16px;
+  }
+  .countdown-box {
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 8px 14px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+  .countdown-num { font-size: 24px; font-weight: 700; line-height: 1; }
+  .countdown-lbl { font-size: 10px; opacity: 0.8; margin-top: 2px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--gray); margin-bottom: 12px;
+  }
+
+  /* TODAY */
+  .today-phase {
+    display: inline-block;
+    background: var(--green-pale);
+    color: var(--green);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .today-workout-title {
+    font-size: 20px; font-weight: 700;
+    line-height: 1.2; margin-bottom: 6px;
+  }
+  .today-meta {
+    display: flex; gap: 16px; margin-bottom: 16px;
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 13px; color: var(--gray);
+  }
+  .meta-item svg { width: 14px; height: 14px; }
+  .workout-detail {
+    background: var(--gray-light);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px; line-height: 1.7;
+    color: var(--dark);
+    margin-bottom: 14px;
+    white-space: pre-line;
+  }
+  .tip-box {
+    background: var(--sky-pale);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px; color: #1d6986;
+    line-height: 1.5; margin-bottom: 14px;
+  }
+  .tip-box strong { display: block; margin-bottom: 2px; }
+
+  .done-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .done-btn.incomplete {
+    background: var(--green);
+    color: white;
+  }
+  .done-btn.complete {
+    background: var(--green-pale);
+    color: var(--green);
+  }
+  .done-btn:active { transform: scale(0.98); }
+
+  /* REST DAY */
+  .rest-card {
+    text-align: center; padding: 28px 16px;
+  }
+  .rest-icon { font-size: 44px; margin-bottom: 8px; }
+  .rest-title { font-size: 20px; font-weight: 700; }
+  .rest-sub { font-size: 13px; color: var(--gray); margin-top: 4px; }
+
+  /* WEEK VIEW */
+  .week-strip {
+    display: flex; gap: 6px; overflow-x: auto;
+    padding-bottom: 4px; margin-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .week-strip::-webkit-scrollbar { display: none; }
+  .week-day {
+    flex: 0 0 auto;
+    width: 42px; height: 56px;
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 10px; gap: 3px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--gray-light);
+    color: var(--gray);
+  }
+  .week-day .wd-num { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .week-day.today { border-color: var(--green); background: var(--green-pale); }
+  .week-day.today .wd-num { color: var(--green); }
+  .week-day.done { background: var(--green); color: white; }
+  .week-day.done .wd-num { color: white; }
+  .week-day.rest-done { background: var(--gray-mid); }
+  .week-day.selected { border-color: var(--sky); }
+
+  /* STREAK */
+  .streak-row {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .streak-num {
+    font-size: 36px; font-weight: 800; color: var(--orange);
+    line-height: 1;
+  }
+  .streak-label { font-size: 13px; color: var(--gray); }
+  .streak-sub { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+  /* PROGRESS BAR */
+  .prog-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; margin-bottom: 6px;
+  }
+  .prog-row span:last-child { color: var(--gray); }
+  .prog-bar {
+    height: 8px; background: var(--gray-light);
+    border-radius: 4px; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .prog-fill {
+    height: 100%; background: var(--green);
+    border-radius: 4px; transition: width 0.5s ease;
+  }
+
+  /* PHASE PILLS */
+  .phase-list { display: flex; flex-direction: column; gap: 8px; }
+  .phase-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--gray-light);
+  }
+  .phase-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .phase-info { flex: 1; }
+  .phase-name { font-size: 13px; font-weight: 600; }
+  .phase-dates { font-size: 11px; color: var(--gray); }
+  .phase-badge {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+  }
+
+  /* PLAN PAGE */
+  .week-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .week-header-left { font-size: 14px; font-weight: 700; }
+  .week-header-phase {
+    font-size: 11px; color: var(--gray); margin-top: 1px;
+  }
+  .week-header-right { font-size: 18px; transition: transform 0.2s; }
+  .week-header-right.open { transform: rotate(180deg); }
+  .week-days-list { display: none; margin-bottom: 10px; }
+  .week-days-list.open { display: flex; flex-direction: column; gap: 4px; }
+  .plan-day-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+  .plan-day-row.active-day { border-left: 3px solid var(--green); }
+  .plan-day-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .plan-day-name { font-weight: 600; width: 30px; }
+  .plan-day-title { flex: 1; color: var(--dark); }
+  .plan-day-done { color: var(--green); font-size: 16px; }
+  .plan-day-rest { color: var(--gray); font-size: 12px; }
+
+  /* HIKE SEGMENTS */
+  .seg-card {
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-left: 4px solid var(--green);
+    background: white;
+    box-shadow: var(--shadow);
+  }
+  .seg-card.strenuous { border-left-color: var(--orange); }
+  .seg-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .seg-stats {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .seg-stat {
+    background: var(--gray-light);
+    border-radius: 6px; padding: 3px 8px;
+    font-size: 11px; color: var(--gray);
+  }
+  .seg-stat strong { color: var(--dark); }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-box {
+    background: white; border-radius: 12px;
+    padding: 14px; box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .stat-box-num { font-size: 26px; font-weight: 800; color: var(--green); }
+  .stat-box-lbl { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed;
+    inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 200; align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 20px 20px 0 0;
+    width: 100%; max-height: 85vh; overflow-y: auto;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--gray-mid);
+    border-radius: 2px; margin: 0 auto 16px;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .modal-phase {
+    display: inline-block;
+    background: var(--green-pale); color: var(--green);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;
+  }
+  .modal-close {
+    float: right; background: var(--gray-light);
+    border: none; border-radius: 50%;
+    width: 28px; height: 28px;
+    cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+
+  <!-- Text -->
+  <div class="header-text">
+    <div class="header-title">Dolomites Training</div>
+    <div class="header-sub">Alta Via 1 · June 29 – July 4, 2026</div>
+    <div class="countdown-row">
+      <div class="countdown-box">
+        <div class="countdown-num" id="cd-days">–</div>
+        <div class="countdown-lbl">days</div>
+      </div>
+      <div class="countdown-box">
+        <div class="countdown-num" id="cd-weeks">–</div>
+        <div class="countdown-lbl">weeks</div>
+      </div>
+      <div class="countdown-box">
+        <div class="countdown-num" id="cd-workouts">–</div>
+        <div class="countdown-lbl">done</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TODAY PAGE -->
+<div class="page active" id="page-today">
+  <div id="today-content"></div>
+</div>
+
+<!-- PROGRESS PAGE -->
+<div class="page" id="page-progress">
+  <div class="stats-grid" style="margin-bottom:12px;">
+    <div class="stat-box">
+      <div class="stat-box-num" id="stat-done">0</div>
+      <div class="stat-box-lbl">Workouts Done</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-num" id="stat-streak">0</div>
+      <div class="stat-box-lbl">Day Streak</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-num" id="stat-week">0</div>
+      <div class="stat-box-lbl">This Week</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-box-num" id="stat-pct">0%</div>
+      <div class="stat-box-lbl">Plan Complete</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Overall Progress</div>
+    <div class="prog-row"><span>Plan completion</span><span id="prog-label">0 / 0 workouts</span></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">This Week</div>
+    <div class="week-strip" id="week-strip"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Training Phases</div>
+    <div class="phase-list" id="phase-list"></div>
+  </div>
+</div>
+
+<!-- PLAN PAGE -->
+<div class="page" id="page-plan">
+  <div id="plan-content"></div>
+</div>
+
+<!-- HIKE PAGE -->
+<div class="page" id="page-hike">
+  <div class="card">
+    <div class="card-title">Your Route</div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Alta Via 1, Dolomites · 5 segments · ~38 miles total</p>
+    <div id="hike-segments"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Packing Checklist</div>
+    <div id="pack-list"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('today',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Today
+  </button>
+  <button class="nav-btn" onclick="showPage('progress',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Progress
+  </button>
+  <button class="nav-btn" onclick="showPage('plan',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Full Plan
+  </button>
+  <button class="nav-btn" onclick="showPage('hike',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-8 4 4 4-6 4 10"/></svg>
+    The Hike
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ─── TRAINING PLAN ────────────────────────────────────────────────
+// Start: March 9, 2026  |  Hike: June 29, 2026  |  16 weeks
+// Days: Mon–Sun, 4 workout days + 3 rest days per week
+// REST = no workout; each workout day has full details
+
+const PLAN_START = new Date('2026-02-23'); // Monday
+const HIKE_DATE  = new Date('2026-06-29');
+
+const PHASES = [
+  { name: 'Base',  weeks: [1,2],  color: '#52b788', desc: 'Establish routine & push to Level 6–7' },
+  { name: 'Build', weeks: [3,8],  color: '#4895ef', desc: 'Longer sessions, intervals, incline + strength' },
+  { name: 'Peak',  weeks: [9,13], color: '#e76f51', desc: 'Back-to-back days, loaded hikes, benchmark 60 min' },
+  { name: 'Taper', weeks: [14,15],color: '#f4a261', desc: 'Reduce volume, stay sharp' },
+  { name: 'Hike!', weeks: [16,16],color: '#2d6a4f', desc: 'You\'re in the Dolomites!' },
+];
+
+// Day-of-week workout templates per phase (0=Mon,...,6=Sun)
+// Workout days: Mon, Tue, Thu, Sat  |  Rest: Wed, Fri, Sun
+// (We'll vary this slightly per phase)
+
+function getPhase(week) {
+  for (const p of PHASES) {
+    if (week >= p.weeks[0] && week <= p.weeks[1]) return p;
+  }
+  return PHASES[PHASES.length-1];
+}
+
+function buildPlan() {
+  const plan = []; // array of {date, week, dayOfWeek, isRest, title, duration, type, detail, tip}
+
+  const workoutsByPhase = {
+    'Base': [
+      // Mon — already at L5–6, push to L6–7 and extend duration
+      { title:'Stairclimber Push', duration:'45 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Week 1: 35 min at Level 5 (~54 steps/min) — start here and find your groove\n• Week 2: 35 min at Level 5, last 5 min push to Level 6 (~61 steps/min)\n• 5 min cool-down at Level 3\n• No gripping rails — hands lightly resting only\nTarget effort: 6/10 RPE, conversational pace', tip:'Starting at Level 5 lets you build great form and endurance before pushing higher. Upright posture, no rail-gripping — this sets the foundation.' },
+      // Tue
+      { title:'Incline Treadmill Walk', duration:'40 min', type:'Endurance', detail:'• Set treadmill to 10–12% incline\n• Walk at 3.0–3.5 mph the full time\n• No holding the rails — engage your core\nGoal: sustained effort, not speed', tip:'This is your single most hike-specific gym exercise. Prioritize it every week.' },
+      // Thu
+      { title:'Bodyweight Strength', duration:'35 min', type:'Strength', detail:'3 rounds:\n• 15 squats\n• 10 reverse lunges each leg\n• 15 glute bridges\n• 10 step-ups (use bench or box)\n• 30 sec plank\n• 15 calf raises\nRest 60 sec between rounds', tip:'Strong glutes and calves = happy knees on descents. This matters more than cardio.' },
+      // Sat
+      { title:'Outdoor Walk/Hike', duration:'75 min', type:'Long Day', detail:'• Walk at a brisk pace outdoors\n• Find hills wherever possible (Central Park, Fort Tryon, Riverside Park)\n• Goal: 4–5 miles\n• Wear your hiking shoes to break them in', tip:'Wear your hiking shoes to break them in. Your feet will thank you in July.' },
+    ],
+    'Build': [
+      // Mon — Stairclimber intervals, building toward 60 min at L6–7
+      { title:'Stairclimber Intervals', duration:'50 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Weeks 3–4: 6 × (3 min at Level 6 / 2 min at Level 4)\n• Weeks 5–6: 6 × (3 min at Level 7 / 2 min at Level 5)\n• Weeks 7–8: 6 × (5 min at Level 7 / 2 min at Level 5), then 10 min steady at Level 6\n• 5 min cool-down at Level 3\nLevel 6 = ~61 steps/min · Level 7 = ~70 steps/min (hard, short phrases only)\nNo handrail use on work intervals', tip:'Weeks 3–4 at Level 6 let you build interval endurance before pushing to Level 7. Each week adds a little more — trust the progression.' },
+      // Tue
+      { title:'Incline Treadmill — Loaded', duration:'50 min', type:'Endurance', detail:'• 10–15% incline, 3.0–3.5 mph\n• Weeks 3–4: no pack\n• Weeks 5–8: wear hiking pack with 5–8 lbs\n• Focus on heel-to-toe footstrike\n• Optional: 10 min at 0% incline to finish', tip:'Altitude in the Dolomites means less oxygen. Sustained effort now builds your lungs.' },
+      // Thu
+      { title:'Strength + Core', duration:'40 min', type:'Strength', detail:'3 rounds:\n• 12 Bulgarian split squats each leg\n• 15 Romanian deadlifts (moderate weight)\n• 20 step-ups with pack\n• 15 side lunges\n• 1 min plank\n• 20 calf raises (add weight)\nRest 60 sec', tip:'Focus on single-leg stability — this is your knee protection on rocky terrain.' },
+      // Sat
+      { title:'Long Outdoor Walk', duration:'90 min', type:'Long Day', detail:'• 5–7 miles at a hiking pace\n• Use hiking poles if you have them\n• Wear your full hiking outfit + shoes\n• Elevation gain wherever possible\nBonus: Fort Tryon Park, Wave Hill, or NJ Palisades', tip:'Eat a snack during the walk — practice your trail snacking routine for the Dolomites.' },
+    ],
+    'Peak': [
+      // Mon — Stairclimber benchmark: full 60 min at L6–7 with pack
+      { title:'Stairclimber Benchmark', duration:'60 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• Weeks 9–10: 50 min steady at Level 7 (~70 steps/min), no pack\n• Weeks 11–12: 60 min at Level 7 with 10 lb pack — full benchmark!\n• Week 13: 60 min at Level 7–8 with pack (peak effort)\n• 5 min cool-down at Level 3\nLevel 7 for 60 min = ~2,800 vertical ft on machine\nNo handrail use. 7–8/10 RPE.', tip:'This is your hardest training session. Completing 60 min at Level 7 with a pack means you\'re genuinely ready for Segment 2\'s 3,300 ft climb.' },
+      // Tue — back-to-back day
+      { title:'Back-to-Back Day 2 — Incline', duration:'55 min', type:'Endurance', detail:'• Incline treadmill 12–15%, 3.0 mph\n• Wear pack (8–12 lbs)\n• This is your second workout day in a row — that\'s intentional\n• It builds the fatigue resilience you\'ll need on days 2–5 of the hike', tip:'Recovery nutrition matters now. Eat enough protein the night before.' },
+      // Thu
+      { title:'Heavy Strength + Descents', duration:'45 min', type:'Strength', detail:'3 rounds:\n• 10 heavy squats\n• 12 step-downs (step off box slowly — 3 sec eccentric)\n• 15 single-leg glute bridges each side\n• 10 lateral band walks each direction\n• 90 sec plank\n• 20 weighted calf raises\nRest 45 sec', tip:'Eccentric step-downs train your quads for the long descents. Segment 3 drops 1,300 ft.' },
+      // Sat
+      { title:'Long Day — Loaded Hike', duration:'2.5–3 hrs', type:'Long Day', detail:'• 7–9 miles with as much elevation as possible\n• Full pack (10–15 lbs)\n• Eat and drink as you will on the actual hike\n• Target: Palisades, Staten Island Greenbelt, or NJ/CT trails\nThis is your key weekly workout!', tip:'Practice your snack timing: eat every 60–90 min. Your body needs fuel on multi-day hikes.' },
+    ],
+    'Taper': [
+      // Mon — maintain level, cut duration
+      { title:'Easy Stairclimber', duration:'30 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 20 min at Level 7 (~70 steps/min) — same level as peak, shorter duration\n• 5 min cool-down at Level 3\nDo NOT drop the level — just cut the time\nEffort: 6/10 RPE, controlled and smooth', tip:'Taper is not laziness — your body is consolidating all your training gains. Keeping the level up preserves your fitness.' },
+      // Tue
+      { title:'Easy Incline Walk', duration:'35 min', type:'Endurance', detail:'• 8% incline, comfortable pace\n• Light pack (5 lbs max)\n• Keep heart rate moderate\nNo heroics this phase!', tip:'Sleep extra this week. Sleep is your #1 performance enhancer before a big hike.' },
+      // Thu
+      { title:'Light Strength', duration:'30 min', type:'Strength', detail:'2 rounds (reduced volume):\n• 12 squats\n• 10 reverse lunges each side\n• 10 step-ups\n• 45 sec plank\n• 15 calf raises\nNo heavy weights — just maintain movement patterns', tip:'Stretch more than usual this week. Hip flexors, calves, quads, hamstrings.' },
+      // Sat
+      { title:'Short Shakeout Walk', duration:'45–60 min', type:'Long Day', detail:'• Easy 2–3 mile walk outdoors\n• Wear your hiking boots\n• Low intensity, enjoy the movement\n• Review your gear and packing list!', tip:'Last long-ish workout before the hike. Enjoy it — you\'ve earned this.' },
+    ],
+    'Hike!': [
+      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
+      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
+      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
+      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
+    ],
+  };
+
+  // Workout pattern per week: workout on [0,1,3,5] = Mon,Tue,Thu,Sat; rest on [2,4,6] = Wed,Fri,Sun
+  const WORKOUT_DAYS = [0, 1, 3, 5]; // Mon, Tue, Thu, Sat
+  const REST_DAYS    = [2, 4, 6];
+
+  let workoutIndex = { 'Base':0, 'Build':0, 'Peak':0, 'Taper':0, 'Hike!':0 };
+
+  for (let w = 1; w <= 16; w++) {
+    const phase = getPhase(w);
+    const pname = phase.name;
+    const workouts = workoutsByPhase[pname];
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(PLAN_START);
+      date.setDate(PLAN_START.getDate() + (w-1)*7 + d);
+
+      const isRest = REST_DAYS.includes(d);
+      let entry = { date, week: w, dayOfWeek: d, phase: pname, phaseColor: phase.color, isRest };
+
+      if (!isRest && pname !== 'Hike!') {
+        const wIdx = WORKOUT_DAYS.indexOf(d);
+        const workout = workouts[wIdx % workouts.length];
+        // In peak phase, make Tue a "back-to-back" day
+        Object.assign(entry, workout);
+        if (pname === 'Build' || pname === 'Peak') {
+          // Scale duration slightly with week
+          entry.duration = workout.duration;
+        }
+      } else if (!isRest && pname === 'Hike!') {
+        const workout = workouts[0];
+        Object.assign(entry, workout);
+      } else {
+        entry.title = 'Rest Day';
+        entry.detail = 'Active recovery: gentle walk, stretching, or yoga.\nFoam roll your calves, quads, and IT band.';
+        entry.tip = 'Rest days are part of the plan. Your muscles rebuild stronger during recovery.';
+        entry.duration = '';
+        entry.type = 'Rest';
+      }
+
+      plan.push(entry);
+    }
+  }
+  return plan;
+}
+
+const PLAN = buildPlan();
+const WORKOUT_PLAN = PLAN.filter(d => !d.isRest);
+const TOTAL_WORKOUTS = WORKOUT_PLAN.length;
+
+// ─── LOCAL STORAGE ────────────────────────────────────────────────
+function getCompleted() {
+  try { return JSON.parse(localStorage.getItem('dolo_completed') || '[]'); }
+  catch { return []; }
+}
+function setCompleted(arr) {
+  localStorage.setItem('dolo_completed', JSON.stringify(arr));
+}
+function toggleDay(dateStr) {
+  const arr = getCompleted();
+  const idx = arr.indexOf(dateStr);
+  if (idx === -1) arr.push(dateStr);
+  else arr.splice(idx, 1);
+  setCompleted(arr);
+}
+function isCompleted(dateStr) {
+  return getCompleted().includes(dateStr);
+}
+function dateKey(d) {
+  return d.toISOString().split('T')[0];
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────
+const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_NAMES_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function today() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function sameDay(a, b) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+function getDayEntry(date) {
+  return PLAN.find(d => sameDay(d.date, date));
+}
+function getTodayEntry() {
+  return getDayEntry(today());
+}
+
+function typeColor(type) {
+  const map = { 'Cardio':'#4895ef', 'Endurance':'#52b788', 'Strength':'#e76f51', 'Long Day':'#f4a261', 'Rest':'#adb5bd', 'Hike':'#2d6a4f' };
+  return map[type] || '#adb5bd';
+}
+
+// ─── COUNTDOWN ───────────────────────────────────────────────────
+function updateCountdown() {
+  const now = today();
+  const diff = Math.ceil((HIKE_DATE - now) / (1000*60*60*24));
+  document.getElementById('cd-days').textContent = Math.max(0, diff);
+  document.getElementById('cd-weeks').textContent = Math.max(0, Math.ceil(diff/7));
+  document.getElementById('cd-workouts').textContent = getCompleted().length;
+}
+
+// ─── TODAY PAGE ──────────────────────────────────────────────────
+function renderToday() {
+  const entry = getTodayEntry();
+  const container = document.getElementById('today-content');
+
+  if (!entry) {
+    container.innerHTML = `<div class="card rest-card"><div class="rest-icon">🏔️</div><div class="rest-title">Training Complete!</div><div class="rest-sub">See you in the Dolomites!</div></div>`;
+    return;
+  }
+
+  const key = dateKey(entry.date);
+  const done = isCompleted(key);
+
+  if (entry.isRest) {
+    container.innerHTML = `
+      <div class="card rest-card">
+        <div class="rest-icon">🌿</div>
+        <div class="rest-title">Rest Day</div>
+        <div class="rest-sub">Week ${entry.week} · ${DAY_NAMES_FULL[entry.dayOfWeek]}</div>
+        <div style="margin-top:14px;font-size:13px;color:var(--gray);line-height:1.6;">${entry.detail.replace(/\n/g,'<br>')}</div>
+        <div class="tip-box" style="margin-top:12px;"><strong>💡 Tip</strong>${entry.tip}</div>
+      </div>`;
+    return;
+  }
+
+  const dateLabel = `${MONTH_NAMES[entry.date.getMonth()]} ${entry.date.getDate()}`;
+
+  container.innerHTML = `
+    <div class="card" style="padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="today-phase" style="background:${entry.phaseColor}22;color:${entry.phaseColor}">${entry.phase} Phase · Week ${entry.week}</span>
+        <span style="font-size:12px;color:var(--gray);">${dateLabel}</span>
+      </div>
+      <div class="today-workout-title">${entry.title}</div>
+      <div class="today-meta">
+        ${entry.duration ? `<div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${entry.duration}</div>` : ''}
+        <div class="meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span style="color:${typeColor(entry.type)};font-weight:600;">${entry.type}</span></div>
+      </div>
+      <div class="workout-detail">${entry.detail}</div>
+      <div class="tip-box"><strong>💡 Tip</strong>${entry.tip}</div>
+      <button class="done-btn ${done ? 'complete' : 'incomplete'}" id="done-btn" onclick="toggleWorkout('${key}')">
+        ${done ? '✓ Completed!' : 'Mark as Done'}
+      </button>
+    </div>
+    <div class="card" style="padding:14px 16px;">
+      <div class="card-title">This Week</div>
+      <div class="week-strip" id="today-week-strip"></div>
+    </div>
+  `;
+  renderMiniWeek('today-week-strip');
+}
+
+function toggleWorkout(key) {
+  toggleDay(key);
+  updateCountdown();
+  renderToday();
+  renderProgress();
+}
+
+function renderMiniWeek(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const t = today();
+  // Find Monday of current week
+  const dow = (t.getDay() + 6) % 7; // 0=Mon
+  const monday = new Date(t); monday.setDate(t.getDate() - dow);
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const entry = getDayEntry(d);
+    const isToday = sameDay(d, t);
+    const key = dateKey(d);
+    const done = isCompleted(key);
+    const isRest = entry ? entry.isRest : true;
+
+    let cls = 'week-day';
+    if (isToday) cls += ' today';
+    if (done && !isRest) cls += ' done';
+    if (done && isRest) cls += ' rest-done';
+
+    const dot = isRest ? '–' : (done ? '✓' : (entry ? entry.type[0] : '?'));
+    html += `<div class="${cls}" onclick="openDayModal('${key}')">
+      <span class="wd-num">${d.getDate()}</span>
+      <span>${DAY_NAMES[i]}</span>
+      <span style="font-size:9px;">${dot}</span>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ─── PROGRESS PAGE ────────────────────────────────────────────────
+function renderProgress() {
+  const completed = getCompleted();
+  const totalWorkouts = WORKOUT_PLAN.length;
+  const doneCount = completed.filter(k => WORKOUT_PLAN.some(d => dateKey(d.date) === k)).length;
+  const pct = totalWorkouts > 0 ? Math.round(doneCount / totalWorkouts * 100) : 0;
+
+  // This week count
+  const t = today();
+  const dow = (t.getDay() + 6) % 7;
+  const monday = new Date(t); monday.setDate(t.getDate() - dow);
+  let weekDone = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    if (isCompleted(dateKey(d)) && getDayEntry(d) && !getDayEntry(d).isRest) weekDone++;
+  }
+
+  // Streak
+  let streak = 0;
+  let check = new Date(t);
+  while (true) {
+    const entry = getDayEntry(check);
+    if (!entry) break;
+    if (entry.isRest) { check.setDate(check.getDate()-1); continue; }
+    if (isCompleted(dateKey(check))) { streak++; check.setDate(check.getDate()-1); }
+    else break;
+  }
+
+  document.getElementById('stat-done').textContent = doneCount;
+  document.getElementById('stat-streak').textContent = streak;
+  document.getElementById('stat-week').textContent = weekDone;
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('prog-label').textContent = `${doneCount} / ${totalWorkouts} workouts`;
+  document.getElementById('prog-fill').style.width = pct + '%';
+
+  // Week strip
+  renderMiniWeek('week-strip');
+
+  // Phase list
+  const phaseEl = document.getElementById('phase-list');
+  let phaseHTML = '';
+  const currentPhase = getTodayEntry()?.phase || '';
+  for (const p of PHASES) {
+    const startDate = new Date(PLAN_START); startDate.setDate(PLAN_START.getDate() + (p.weeks[0]-1)*7);
+    const endDate   = new Date(PLAN_START); endDate.setDate(PLAN_START.getDate() + p.weeks[1]*7 - 1);
+    const pWorkouts = WORKOUT_PLAN.filter(d => d.phase === p.name);
+    const pDone = pWorkouts.filter(d => isCompleted(dateKey(d.date))).length;
+    const isCurrent = p.name === currentPhase;
+    const isComplete = today() > endDate;
+
+    const badge = isComplete
+      ? `<span class="phase-badge" style="background:${p.color}22;color:${p.color}">Done ✓</span>`
+      : isCurrent
+      ? `<span class="phase-badge" style="background:${p.color}22;color:${p.color}">Active</span>`
+      : today() < startDate
+      ? `<span class="phase-badge" style="background:var(--gray-light);color:var(--gray)">Upcoming</span>`
+      : '';
+
+    const sm = MONTH_NAMES[startDate.getMonth()]; const em = MONTH_NAMES[endDate.getMonth()];
+    const dateStr = `${sm} ${startDate.getDate()} – ${em} ${endDate.getDate()}`;
+
+    phaseHTML += `<div class="phase-item">
+      <div class="phase-dot" style="background:${p.color}"></div>
+      <div class="phase-info">
+        <div class="phase-name">${p.name}</div>
+        <div class="phase-dates">${dateStr} · ${pDone}/${pWorkouts.length} done</div>
+      </div>
+      ${badge}
+    </div>`;
+  }
+  phaseEl.innerHTML = phaseHTML;
+}
+
+// ─── PLAN PAGE ───────────────────────────────────────────────────
+function renderPlan() {
+  const container = document.getElementById('plan-content');
+  const t = today();
+  let html = '';
+
+  for (let w = 1; w <= 16; w++) {
+    const phase = getPhase(w);
+    const startDate = new Date(PLAN_START); startDate.setDate(PLAN_START.getDate() + (w-1)*7);
+    const endDate   = new Date(startDate); endDate.setDate(startDate.getDate() + 6);
+    const sm = MONTH_NAMES[startDate.getMonth()]; const em = MONTH_NAMES[endDate.getMonth()];
+    const dateStr = `${sm} ${startDate.getDate()} – ${em} ${endDate.getDate()}`;
+    const isCurrentWeek = t >= startDate && t <= endDate;
+
+    html += `<div class="week-header" onclick="toggleWeek(${w})">
+      <div>
+        <div class="week-header-left">Week ${w} ${isCurrentWeek ? '← current' : ''}</div>
+        <div class="week-header-phase">${phase.name} Phase · ${dateStr}</div>
+      </div>
+      <div class="week-header-right ${isCurrentWeek ? 'open' : ''}" id="week-chevron-${w}">▾</div>
+    </div>
+    <div class="week-days-list ${isCurrentWeek ? 'open' : ''}" id="week-days-${w}">`;
+
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(startDate); date.setDate(startDate.getDate() + d);
+      const entry = getDayEntry(date);
+      if (!entry) continue;
+      const key = dateKey(date);
+      const done = isCompleted(key);
+      const isToday = sameDay(date, t);
+      const dotColor = entry.isRest ? '#adb5bd' : typeColor(entry.type);
+
+      html += `<div class="plan-day-row ${isToday ? 'active-day' : ''}" onclick="openDayModal('${key}')">
+        <div class="plan-day-dot" style="background:${dotColor}"></div>
+        <div class="plan-day-name">${DAY_NAMES[d]}</div>
+        <div class="plan-day-title">${entry.isRest ? '<span style="color:var(--gray)">Rest Day</span>' : entry.title}</div>
+        ${done && !entry.isRest ? '<div class="plan-day-done">✓</div>' : ''}
+        ${entry.isRest ? '<div class="plan-day-rest">–</div>' : ''}
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function toggleWeek(w) {
+  const el = document.getElementById(`week-days-${w}`);
+  const ch = document.getElementById(`week-chevron-${w}`);
+  el.classList.toggle('open');
+  ch.classList.toggle('open');
+}
+
+// ─── HIKE PAGE ───────────────────────────────────────────────────
+const SEGMENTS = [
+  { name:'Lago di Braies → Rifugio Sennes', day:'Day 1 · Jun 29', dist:'7.5 mi', up:'~2,700 ft', down:'~900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Cool mornings; afternoon clouds; chance of rain', strenuous:false },
+  { name:'Rifugio Sennes → Rifugio Fanes', day:'Day 2 · Jun 30', dist:'6.8 mi', up:'~1,800 ft', down:'~1,900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Similar alpine pattern; storms possible after noon', strenuous:false },
+  { name:'Rifugio Fanes → Rifugio Lagazuoi', day:'Day 3 · Jul 1', dist:'9.0 mi', up:'~3,300 ft', down:'~1,300 ft', time:'6–7 hrs', diff:'Strenuous', conditions:'Cooler at altitude; wind + afternoon storms', strenuous:true },
+  { name:'Rifugio Lagazuoi → Rifugio Averau', day:'Day 4 · Jul 2', dist:'6.5 mi', up:'~2,300 ft', down:'~2,400 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Morning sun; clouds later; short storms common', strenuous:false },
+  { name:'Rifugio Averau → Rifugio Staulanza', day:'Day 5 · Jul 3', dist:'8.5 mi', up:'~1,150 ft', down:'~2,950 ft', time:'5–7 hrs', diff:'Moderate', conditions:'Warmer lower down; storms still possible', strenuous:false },
+];
+
+const PACK_ITEMS = [
+  { cat:'Footwear', items:['Waterproof hiking boots (broken in!)', 'Wool or synthetic hiking socks × 3', 'Camp sandals or flip-flops'] },
+  { cat:'Clothing', items:['Moisture-wicking base layer × 2', 'Fleece or down mid-layer', 'Waterproof rain jacket', 'Convertible pants or hiking shorts', 'Sun hat + warm beanie'] },
+  { cat:'Navigation & Safety', items:['Downloaded offline maps (Maps.me or AllTrails)', 'Small first aid kit', 'Emergency whistle', 'Headlamp + extra batteries'] },
+  { cat:'Gear', items:['Trekking poles (highly recommended!)', '35–40L backpack', 'Sleeping bag liner (rifugio sheets can be thin)', 'Sunglasses (UV-rated)'] },
+  { cat:'Nutrition & Hydration', items:['2L water capacity (bottles or reservoir)', 'Water purification tabs (backup)', 'High-calorie trail snacks', 'Electrolyte packets'] },
+  { cat:'Wellness', items:['Sunscreen SPF 50+', 'Blister kit (moleskin, Compeed)', 'Ibuprofen + any personal meds', 'Hand sanitizer'] },
+];
+
+function renderHike() {
+  const segEl = document.getElementById('hike-segments');
+  let html = '';
+  for (const s of SEGMENTS) {
+    html += `<div class="seg-card ${s.strenuous ? 'strenuous' : ''}">
+      <div class="seg-title">${s.strenuous ? '⚠️ ' : ''}${s.name}</div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">${s.day}</div>
+      <div class="seg-stats">
+        <div class="seg-stat">📍 <strong>${s.dist}</strong></div>
+        <div class="seg-stat">⬆ <strong>${s.up}</strong></div>
+        <div class="seg-stat">⬇ <strong>${s.down}</strong></div>
+        <div class="seg-stat">⏱ <strong>${s.time}</strong></div>
+        <div class="seg-stat" style="color:${s.strenuous ? 'var(--orange)' : 'var(--green)'}"><strong>${s.diff}</strong></div>
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-top:8px;">🌤 ${s.conditions}</div>
+    </div>`;
+  }
+  segEl.innerHTML = html;
+
+  const packEl = document.getElementById('pack-list');
+  let pHtml = '';
+  for (const cat of PACK_ITEMS) {
+    pHtml += `<div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${cat.cat}</div>`;
+    for (const item of cat.items) {
+      const key = 'pack_' + item.replace(/\s/g,'_');
+      const checked = localStorage.getItem(key) === '1';
+      pHtml += `<label style="display:flex;align-items:center;gap:10px;font-size:13px;padding:5px 0;cursor:pointer;">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePack('${key}', this)" style="width:16px;height:16px;accent-color:var(--green);">
+        <span style="${checked ? 'text-decoration:line-through;color:var(--gray)' : ''}">${item}</span>
+      </label>`;
+    }
+    pHtml += `</div>`;
+  }
+  packEl.innerHTML = pHtml;
+}
+
+function togglePack(key, el) {
+  localStorage.setItem(key, el.checked ? '1' : '0');
+  const span = el.nextElementSibling;
+  span.style.textDecoration = el.checked ? 'line-through' : '';
+  span.style.color = el.checked ? 'var(--gray)' : '';
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────
+function openDayModal(key) {
+  const date = new Date(key + 'T00:00:00');
+  const entry = getDayEntry(date);
+  if (!entry) return;
+
+  const done = isCompleted(key);
+  const dayName = DAY_NAMES_FULL[entry.dayOfWeek];
+  const dateLabel = `${MONTH_NAMES[entry.date.getMonth()]} ${entry.date.getDate()}, 2026`;
+
+  let body;
+  if (entry.isRest) {
+    body = `<div class="modal-phase" style="background:#adb5bd22;color:#6c757d">Rest Day</div>
+      <div class="modal-title">Rest & Recovery</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:14px;">${dayName} · ${dateLabel} · Week ${entry.week}</div>
+      <div class="workout-detail">${entry.detail}</div>
+      <div class="tip-box"><strong>💡 Tip</strong>${entry.tip}</div>`;
+  } else {
+    body = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="modal-phase" style="background:${entry.phaseColor}22;color:${entry.phaseColor}">${entry.phase} · Week ${entry.week}</span>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-title">${entry.title}</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">${dayName} · ${dateLabel}</div>
+      <div class="today-meta">
+        ${entry.duration ? `<div class="meta-item">${entry.duration}</div>` : ''}
+        <div class="meta-item" style="color:${typeColor(entry.type)};font-weight:600;">${entry.type}</div>
+      </div>
+      <div class="workout-detail">${entry.detail}</div>
+      <div class="tip-box"><strong>💡 Tip</strong>${entry.tip}</div>
+      <button class="done-btn ${done ? 'complete' : 'incomplete'}" onclick="toggleWorkoutModal('${key}')">
+        ${done ? '✓ Completed!' : 'Mark as Done'}
+      </button>`;
+  }
+
+  document.getElementById('modal-content').innerHTML = body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function toggleWorkoutModal(key) {
+  toggleDay(key);
+  updateCountdown();
+  renderToday();
+  renderProgress();
+  renderPlan();
+  openDayModal(key);
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+updateCountdown();
+renderToday();
+renderProgress();
+renderPlan();
+renderHike();
+</script>
+</body>
+</html>
