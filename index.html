@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Trail Training">
@@ -38,7 +38,7 @@
     background: #f0f4f0;
     color: var(--dark);
     min-height: 100vh;
-    padding-bottom: 96px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 
   /* NAV */
@@ -63,10 +63,11 @@
   /* HEADER */
   .header {
     color: white;
-    padding: 52px 20px 24px;
+    padding: calc(52px + env(safe-area-inset-top)) 20px 24px;
     position: relative;
     overflow: hidden;
     transition: background 0.4s ease;
+    margin-top: calc(-1 * env(safe-area-inset-top));
   }
   .header.dolomites {
     background: url('dolomites.jpg') center 40% / cover no-repeat;
