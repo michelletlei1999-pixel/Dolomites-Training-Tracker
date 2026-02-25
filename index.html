@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Dolomites Hike">
-<title>Dolomites Training Tracker</title>
+<meta name="apple-mobile-web-app-title" content="Trail Training">
+<title>Trail Training Tracker</title>
 <style>
   :root {
     --green: #2d6a4f;
@@ -19,6 +19,8 @@
     --orange-pale: #fde8df;
     --yellow: #f4a261;
     --yellow-pale: #fef3e2;
+    --volcano: #c1440e;
+    --volcano-pale: #fce4d8;
     --gray: #6c757d;
     --gray-light: #f8f9fa;
     --gray-mid: #dee2e6;
@@ -60,13 +62,18 @@
 
   /* HEADER */
   .header {
-    background: url('dolomites.jpg') center 40% / cover no-repeat;
     color: white;
     padding: 52px 20px 24px;
     position: relative;
     overflow: hidden;
+    transition: background 0.4s ease;
   }
-  /* Dark overlay so text stays readable */
+  .header.dolomites {
+    background: url('dolomites.jpg') center 40% / cover no-repeat;
+  }
+  .header.acatenango {
+    background: url('acatenango.jpg') center 40% / cover no-repeat;
+  }
   .header::before {
     content: '';
     position: absolute; inset: 0;
@@ -76,9 +83,55 @@
       rgba(0,0,0,0.45) 100%);
     z-index: 1;
   }
-
-  /* Text sits above overlay */
   .header-text { position: relative; z-index: 2; }
+
+  /* HIKE SELECTOR */
+  .hike-selector-wrap {
+    position: relative; z-index: 2;
+    margin-bottom: 12px;
+  }
+  .hike-selector {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    font-size: 13px; color: white; font-weight: 600;
+    user-select: none;
+  }
+  .hike-selector svg { width: 14px; height: 14px; opacity: 0.8; }
+
+  .hike-dropdown {
+    display: none;
+    position: absolute; top: 100%; left: 0;
+    margin-top: 6px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    min-width: 240px;
+    z-index: 300;
+  }
+  .hike-dropdown.open { display: block; }
+  .hike-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--gray-light);
+    transition: background 0.15s;
+  }
+  .hike-option:last-child { border-bottom: none; }
+  .hike-option:hover { background: var(--gray-light); }
+  .hike-option.active { background: var(--green-pale); }
+  .hike-option-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .hike-option-info {}
+  .hike-option-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .hike-option-sub { font-size: 11px; color: var(--gray); margin-top: 1px; }
+
   .header-title { font-size: 22px; font-weight: 700; }
   .header-sub { font-size: 13px; opacity: 0.8; margin-top: 2px; }
   .countdown-row {
@@ -360,17 +413,51 @@
     cursor: pointer; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
   }
+
+  /* ALTITUDE BADGE */
+  .altitude-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(193,68,14,0.12);
+    color: var(--volcano);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 10px;
+  }
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
-<div class="header">
-
-  <!-- Text -->
+<div class="header dolomites" id="main-header">
   <div class="header-text">
-    <div class="header-title">Dolomites Training</div>
-    <div class="header-sub">Alta Via 1 · June 29 – July 4, 2026</div>
+
+    <!-- Hike Selector -->
+    <div class="hike-selector-wrap">
+      <div class="hike-selector" onclick="toggleDropdown()">
+        <span id="selector-label">Dolomites — Alta Via 1</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="hike-dropdown" id="hike-dropdown">
+        <div class="hike-option active" id="opt-dolomites" onclick="switchHike('dolomites')">
+          <div class="hike-option-dot" style="background:#52b788"></div>
+          <div class="hike-option-info">
+            <div class="hike-option-name">Dolomites — Alta Via 1</div>
+            <div class="hike-option-sub">Jun 29 – Jul 4, 2026 · Italy · 16-week plan</div>
+          </div>
+        </div>
+        <div class="hike-option" id="opt-acatenango" onclick="switchHike('acatenango')">
+          <div class="hike-option-dot" style="background:#c1440e"></div>
+          <div class="hike-option-info">
+            <div class="hike-option-name">Acatenango — Summit Trek</div>
+            <div class="hike-option-sub">Mar 20, 2026 · Guatemala · Fast-track plan</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-title" id="header-title">Dolomites Training</div>
+    <div class="header-sub" id="header-sub">Alta Via 1 · June 29 – July 4, 2026</div>
     <div class="countdown-row">
       <div class="countdown-box">
         <div class="countdown-num" id="cd-days">–</div>
@@ -386,7 +473,6 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <!-- TODAY PAGE -->
@@ -439,9 +525,9 @@
 
 <!-- HIKE PAGE -->
 <div class="page" id="page-hike">
-  <div class="card">
+  <div id="hike-info-card" class="card">
     <div class="card-title">Your Route</div>
-    <p style="font-size:13px;color:var(--gray);margin-bottom:12px;">Alta Via 1, Dolomites · 5 segments · ~38 miles total</p>
+    <p id="hike-route-desc" style="font-size:13px;color:var(--gray);margin-bottom:12px;"></p>
     <div id="hike-segments"></div>
   </div>
   <div class="card">
@@ -479,115 +565,188 @@
 </div>
 
 <script>
-// ─── TRAINING PLAN ────────────────────────────────────────────────
-// Start: March 9, 2026  |  Hike: June 29, 2026  |  16 weeks
-// Days: Mon–Sun, 4 workout days + 3 rest days per week
-// REST = no workout; each workout day has full details
+// ═══════════════════════════════════════════════════════════════
+// HIKE CONFIGS
+// ═══════════════════════════════════════════════════════════════
 
-const PLAN_START = new Date('2026-02-23'); // Monday
-const HIKE_DATE  = new Date('2026-06-29');
+const HIKE_CONFIGS = {
 
-const PHASES = [
-  { name: 'Base',  weeks: [1,2],  color: '#52b788', desc: 'Establish routine & push to Level 6–7' },
-  { name: 'Build', weeks: [3,8],  color: '#4895ef', desc: 'Longer sessions, intervals, incline + strength' },
-  { name: 'Peak',  weeks: [9,13], color: '#e76f51', desc: 'Back-to-back days, loaded hikes, benchmark 60 min' },
-  { name: 'Taper', weeks: [14,15],color: '#f4a261', desc: 'Reduce volume, stay sharp' },
-  { name: 'Hike!', weeks: [16,16],color: '#2d6a4f', desc: 'You\'re in the Dolomites!' },
-];
+  dolomites: {
+    id: 'dolomites',
+    name: 'Dolomites Training',
+    subtitle: 'Alta Via 1 · June 29 – July 4, 2026',
+    headerClass: 'dolomites',
+    accentColor: '#52b788',
+    storageKey: 'dolo_completed',
+    planStart: new Date('2026-02-23'),
+    hikeDate:  new Date('2026-06-29'),
+    totalWeeks: 16,
 
-// Day-of-week workout templates per phase (0=Mon,...,6=Sun)
-// Workout days: Mon, Tue, Thu, Sat  |  Rest: Wed, Fri, Sun
-// (We'll vary this slightly per phase)
+    phases: [
+      { name: 'Base',  weeks: [1,2],  color: '#52b788', desc: 'Establish routine & push to Level 6–7' },
+      { name: 'Build', weeks: [3,8],  color: '#4895ef', desc: 'Longer sessions, intervals, incline + strength' },
+      { name: 'Peak',  weeks: [9,13], color: '#e76f51', desc: 'Back-to-back days, loaded hikes, benchmark 60 min' },
+      { name: 'Taper', weeks: [14,15],color: '#f4a261', desc: 'Reduce volume, stay sharp' },
+      { name: 'Hike!', weeks: [16,16],color: '#2d6a4f', desc: 'You\'re in the Dolomites!' },
+    ],
 
-function getPhase(week) {
-  for (const p of PHASES) {
-    if (week >= p.weeks[0] && week <= p.weeks[1]) return p;
+    workoutDays: [0, 1, 3, 5], // Mon, Tue, Thu, Sat
+    restDays:    [2, 4, 6],
+
+    workoutsByPhase: {
+      'Base': [
+        { title:'Stairclimber Push', duration:'45 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Week 1: 35 min at Level 5 (~54 steps/min) — start here and find your groove\n• Week 2: 35 min at Level 5, last 5 min push to Level 6 (~61 steps/min)\n• 5 min cool-down at Level 3\n• No gripping rails — hands lightly resting only\nTarget effort: 6/10 RPE, conversational pace', tip:'Starting at Level 5 lets you build great form and endurance before pushing higher. Upright posture, no rail-gripping — this sets the foundation.' },
+        { title:'Incline Treadmill Walk', duration:'40 min', type:'Endurance', detail:'• Set treadmill to 10–12% incline\n• Walk at 3.0–3.5 mph the full time\n• No holding the rails — engage your core\nGoal: sustained effort, not speed', tip:'This is your single most hike-specific gym exercise. Prioritize it every week.' },
+        { title:'Bodyweight Strength', duration:'35 min', type:'Strength', detail:'3 rounds:\n• 15 squats\n• 10 reverse lunges each leg\n• 15 glute bridges\n• 10 step-ups (use bench or box)\n• 30 sec plank\n• 15 calf raises\nRest 60 sec between rounds', tip:'Strong glutes and calves = happy knees on descents. This matters more than cardio.' },
+        { title:'Outdoor Walk/Hike', duration:'75 min', type:'Long Day', detail:'• Walk at a brisk pace outdoors\n• Find hills wherever possible (Central Park, Fort Tryon, Riverside Park)\n• Goal: 4–5 miles\n• Wear your hiking shoes to break them in', tip:'Wear your hiking shoes to break them in. Your feet will thank you in July.' },
+      ],
+      'Build': [
+        { title:'Stairclimber Intervals', duration:'50 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Weeks 3–4: 6 × (3 min at Level 6 / 2 min at Level 4)\n• Weeks 5–6: 6 × (3 min at Level 7 / 2 min at Level 5)\n• Weeks 7–8: 6 × (5 min at Level 7 / 2 min at Level 5), then 10 min steady at Level 6\n• 5 min cool-down at Level 3\nLevel 6 = ~61 steps/min · Level 7 = ~70 steps/min\nNo handrail use on work intervals', tip:'Weeks 3–4 at Level 6 let you build interval endurance before pushing to Level 7. Each week adds a little more — trust the progression.' },
+        { title:'Incline Treadmill — Loaded', duration:'50 min', type:'Endurance', detail:'• 10–15% incline, 3.0–3.5 mph\n• Weeks 3–4: no pack\n• Weeks 5–8: wear hiking pack with 5–8 lbs\n• Focus on heel-to-toe footstrike\n• Optional: 10 min at 0% incline to finish', tip:'Altitude in the Dolomites means less oxygen. Sustained effort now builds your lungs.' },
+        { title:'Strength + Core', duration:'40 min', type:'Strength', detail:'3 rounds:\n• 12 Bulgarian split squats each leg\n• 15 Romanian deadlifts (moderate weight)\n• 20 step-ups with pack\n• 15 side lunges\n• 1 min plank\n• 20 calf raises (add weight)\nRest 60 sec', tip:'Focus on single-leg stability — this is your knee protection on rocky terrain.' },
+        { title:'Long Outdoor Walk', duration:'90 min', type:'Long Day', detail:'• 5–7 miles at a hiking pace\n• Use hiking poles if you have them\n• Wear your full hiking outfit + shoes\n• Elevation gain wherever possible\nBonus: Fort Tryon Park, Wave Hill, or NJ Palisades', tip:'Eat a snack during the walk — practice your trail snacking routine for the Dolomites.' },
+      ],
+      'Peak': [
+        { title:'Stairclimber Benchmark', duration:'60 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• Weeks 9–10: 50 min steady at Level 7 (~70 steps/min), no pack\n• Weeks 11–12: 60 min at Level 7 with 10 lb pack — full benchmark!\n• Week 13: 60 min at Level 7–8 with pack (peak effort)\n• 5 min cool-down at Level 3\nLevel 7 for 60 min = ~2,800 vertical ft on machine\nNo handrail use. 7–8/10 RPE.', tip:'This is your hardest training session. Completing 60 min at Level 7 with a pack means you\'re genuinely ready for Segment 2\'s 3,300 ft climb.' },
+        { title:'Back-to-Back Day 2 — Incline', duration:'55 min', type:'Endurance', detail:'• Incline treadmill 12–15%, 3.0 mph\n• Wear pack (8–12 lbs)\n• This is your second workout day in a row — that\'s intentional\n• It builds the fatigue resilience you\'ll need on days 2–5 of the hike', tip:'Recovery nutrition matters now. Eat enough protein the night before.' },
+        { title:'Heavy Strength + Descents', duration:'45 min', type:'Strength', detail:'3 rounds:\n• 10 heavy squats\n• 12 step-downs (step off box slowly — 3 sec eccentric)\n• 15 single-leg glute bridges each side\n• 10 lateral band walks each direction\n• 90 sec plank\n• 20 weighted calf raises\nRest 45 sec', tip:'Eccentric step-downs train your quads for the long descents. Segment 3 drops 1,300 ft.' },
+        { title:'Long Day — Loaded Hike', duration:'2.5–3 hrs', type:'Long Day', detail:'• 7–9 miles with as much elevation as possible\n• Full pack (10–15 lbs)\n• Eat and drink as you will on the actual hike\n• Target: Palisades, Staten Island Greenbelt, or NJ/CT trails\nThis is your key weekly workout!', tip:'Practice your snack timing: eat every 60–90 min. Your body needs fuel on multi-day hikes.' },
+      ],
+      'Taper': [
+        { title:'Easy Stairclimber', duration:'30 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 20 min at Level 7 (~70 steps/min) — same level as peak, shorter duration\n• 5 min cool-down at Level 3\nDo NOT drop the level — just cut the time\nEffort: 6/10 RPE, controlled and smooth', tip:'Taper is not laziness — your body is consolidating all your training gains. Keeping the level up preserves your fitness.' },
+        { title:'Easy Incline Walk', duration:'35 min', type:'Endurance', detail:'• 8% incline, comfortable pace\n• Light pack (5 lbs max)\n• Keep heart rate moderate\nNo heroics this phase!', tip:'Sleep extra this week. Sleep is your #1 performance enhancer before a big hike.' },
+        { title:'Light Strength', duration:'30 min', type:'Strength', detail:'2 rounds (reduced volume):\n• 12 squats\n• 10 reverse lunges each side\n• 10 step-ups\n• 45 sec plank\n• 15 calf raises\nNo heavy weights — just maintain movement patterns', tip:'Stretch more than usual this week. Hip flexors, calves, quads, hamstrings.' },
+        { title:'Short Shakeout Walk', duration:'45–60 min', type:'Long Day', detail:'• Easy 2–3 mile walk outdoors\n• Wear your hiking boots\n• Low intensity, enjoy the movement\n• Review your gear and packing list!', tip:'Last long-ish workout before the hike. Enjoy it — you\'ve earned this.' },
+      ],
+      'Hike!': [
+        { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
+      ],
+    },
+
+    segments: [
+      { name:'Lago di Braies → Rifugio Sennes', day:'Day 1 · Jun 29', dist:'7.5 mi', up:'~2,700 ft', down:'~900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Cool mornings; afternoon clouds; chance of rain', strenuous:false },
+      { name:'Rifugio Sennes → Rifugio Fanes', day:'Day 2 · Jun 30', dist:'6.8 mi', up:'~1,800 ft', down:'~1,900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Similar alpine pattern; storms possible after noon', strenuous:false },
+      { name:'Rifugio Fanes → Rifugio Lagazuoi', day:'Day 3 · Jul 1', dist:'9.0 mi', up:'~3,300 ft', down:'~1,300 ft', time:'6–7 hrs', diff:'Strenuous', conditions:'Cooler at altitude; wind + afternoon storms', strenuous:true },
+      { name:'Rifugio Lagazuoi → Rifugio Averau', day:'Day 4 · Jul 2', dist:'6.5 mi', up:'~2,300 ft', down:'~2,400 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Morning sun; clouds later; short storms common', strenuous:false },
+      { name:'Rifugio Averau → Rifugio Staulanza', day:'Day 5 · Jul 3', dist:'8.5 mi', up:'~1,150 ft', down:'~2,950 ft', time:'5–7 hrs', diff:'Moderate', conditions:'Warmer lower down; storms still possible', strenuous:false },
+    ],
+
+    routeDesc: 'Alta Via 1, Dolomites · 5 segments · ~38 miles total',
+
+    packItems: [
+      { cat:'Footwear', items:['Waterproof hiking boots (broken in!)', 'Wool or synthetic hiking socks × 3', 'Camp sandals or flip-flops'] },
+      { cat:'Clothing', items:['Moisture-wicking base layer × 2', 'Fleece or down mid-layer', 'Waterproof rain jacket', 'Convertible pants or hiking shorts', 'Sun hat + warm beanie'] },
+      { cat:'Navigation & Safety', items:['Downloaded offline maps (Maps.me or AllTrails)', 'Small first aid kit', 'Emergency whistle', 'Headlamp + extra batteries'] },
+      { cat:'Gear', items:['Trekking poles (highly recommended!)', '35–40L backpack', 'Sleeping bag liner (rifugio sheets can be thin)', 'Sunglasses (UV-rated)'] },
+      { cat:'Nutrition & Hydration', items:['2L water capacity (bottles or reservoir)', 'Water purification tabs (backup)', 'High-calorie trail snacks', 'Electrolyte packets'] },
+      { cat:'Wellness', items:['Sunscreen SPF 50+', 'Blister kit (moleskin, Compeed)', 'Ibuprofen + any personal meds', 'Hand sanitizer'] },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  acatenango: {
+    id: 'acatenango',
+    name: 'Acatenango Training',
+    subtitle: 'Summit Trek · March 20, 2026 · Guatemala',
+    headerClass: 'acatenango',
+    accentColor: '#c1440e',
+    storageKey: 'acat_completed',
+    planStart: new Date('2026-02-25'), // Wednesday Feb 25
+    hikeDate:  new Date('2026-03-20'),
+    totalWeeks: 3,
+
+    phases: [
+      { name: 'Sharpen', weeks: [1,2], color: '#c1440e', desc: 'Max intensity — stairclimber L7–8, strength, loaded walks' },
+      { name: 'Peak',    weeks: [3,3], color: '#e76f51', desc: 'Simulate summit push, back-to-back hard days' },
+      { name: 'Hike!',  weeks: [3,3], color: '#2d6a4f', desc: 'You\'re on Acatenango!' },
+    ],
+
+    workoutDays: [0, 1, 2, 4, 5], // Mon, Tue, Wed, Fri, Sat — 5x/week matches fitness level
+    restDays:    [3, 6],           // Thu, Sun
+
+    workoutsByPhase: {
+      'Sharpen': [
+        { title:'Stairclimber — High Intensity', duration:'50 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 6 × (5 min at Level 7–8 / 2 min at Level 5)\n• 5 min cool-down at Level 4\nLevel 7 = ~70 steps/min · Level 8 = ~80 steps/min\nNo handrail use on work intervals\nTarget: 8/10 RPE on work sets', tip:'Acatenango is 5,000 ft of gain in ~6 miles — the stairclimber at L7–8 is your closest gym equivalent. Push it.' },
+        { title:'Incline Treadmill — Loaded', duration:'45 min', type:'Endurance', detail:'• 12–15% incline, 3.0–3.5 mph\n• Wear hiking pack with 8–10 lbs\n• Simulate the sustained effort of the approach trail\n• No holding rails\nThis is the most hike-specific session in your week', tip:'Acatenango\'s base camp is at 11,500 ft — expect to feel the altitude. Sustained aerobic effort now builds your lungs\' efficiency.' },
+        { title:'Strength — Single-Leg Power', duration:'40 min', type:'Strength', detail:'3 rounds:\n• 12 Bulgarian split squats each leg (add weight)\n• 15 step-ups with pack (knee height box)\n• 12 step-downs slow eccentric (3 sec down)\n• 20 weighted calf raises\n• 15 lateral band walks each direction\n• 1 min plank\nRest 45 sec', tip:'Single-leg strength is everything on volcanic scree. Your ankles and quads will be tested on the descent.' },
+        { title:'Long Loaded Walk', duration:'90 min', type:'Long Day', detail:'• Outdoors with 10–12 lb pack\n• Maximum elevation gain possible\n• Aim for 4–6 miles\n• Wear your hiking boots and trekking poles if you have them\nNYC options: Fort Tryon, Staten Island Greenbelt, NJ Palisades', tip:'Practice pacing yourself — Acatenango\'s summit push starts at 3am. Going out too hard is the #1 mistake on this volcano.' },
+        { title:'Back-to-Back: Stairclimber', duration:'40 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 35 min at Level 7 steady — controlled and smooth\n• 5 min cool-down\nThis is intentionally after yesterday\'s Long Day\nGoal: hold good form and pace even while fatigued', tip:'Back-to-back training days build the fatigue resistance you\'ll need on summit night after a full day of hiking to base camp.' },
+      ],
+      'Peak': [
+        { title:'Stairclimber Peak Effort', duration:'55 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 40 min at Level 8 steady (~80 steps/min)\n• 5 min push to Level 9 if available\n• 5 min cool-down\nThis is your hardest gym session of the whole plan\n7–9/10 RPE — this should feel very hard', tip:'You\'re one week out. This session builds your confidence. If you can hold L8 for 40 min, the summit is yours.' },
+        { title:'Final Loaded Incline', duration:'40 min', type:'Endurance', detail:'• 15% incline, 3.0 mph\n• Full pack (12–15 lbs)\n• Focus on breathing rhythm — inhale 3 steps, exhale 3 steps\n• This mimics the summit push pace', tip:'Controlled breathing at altitude is a skill. Practice it now so it\'s automatic at 13,000 ft.' },
+        { title:'Strength — Peak Session', duration:'35 min', type:'Strength', detail:'3 rounds:\n• 15 heavy squats\n• 12 step-downs (slow, weighted)\n• 20 calf raises (heavy)\n• 15 single-leg glute bridges each side\n• 90 sec plank\nRest 45 sec\nThis is your last hard strength day', tip:'Your legs carry your pack. Strong glutes = energy-efficient climbing. Weak glutes = hip flexors overcompensate = exhaustion.' },
+        { title:'Shakeout + Gear Check', duration:'30 min', type:'Long Day', detail:'• Easy 2 mile walk with your full pack\n• Wear everything you\'re bringing\n• Practice your headlamp, layers, snack access\n• Check: boots, poles, warm layers for summit\nThen rest — seriously, rest.', tip:'The summit push starts at 3am in the cold. Test your headlamp now. Check your batteries. You do not want surprises.' },
+        { title:'Easy Movement', duration:'20 min', type:'Endurance', detail:'• Gentle 20 min walk\n• Light stretching: hip flexors, calves, quads\n• No intensity whatsoever\n• Sleep as much as possible tonight', tip:'You are ready. Your training is done. All you need now is rest and hydration.' },
+      ],
+      'Hike!': [
+        { title:'Hike Day!', duration:'You\'re on Acatenango!', type:'Hike', detail:'Day 1: Hike to base camp (11,500 ft)\nNight: Summit push at 3am\nDay 2: Descend and celebrate!', tip:'Slow and steady wins at altitude. If you feel altitude sickness, descend — no summit is worth your health.' },
+      ],
+    },
+
+    segments: [
+      { name:'Trailhead → Base Camp', day:'Day 1 · Ascent', dist:'~4 mi', up:'~3,000 ft', down:'0 ft', time:'4–6 hrs', diff:'Strenuous', conditions:'Hot at base, cold at camp — expect temps near freezing overnight', strenuous:true },
+      { name:'Base Camp → Summit (3am push)', day:'Night 1 → Morning 2', dist:'~3 mi', up:'~2,000 ft', down:'~2,000 ft', time:'3–5 hrs rt', diff:'Strenuous', conditions:'Dark, cold (28–35°F at summit), volcanic ash/scree, wind', strenuous:true },
+      { name:'Base Camp → Trailhead (Descent)', day:'Day 2 · Descent', dist:'~4 mi', up:'0 ft', down:'~3,000 ft', time:'2–3 hrs', diff:'Moderate', conditions:'Daylight descent, dusty volcanic trail — knees take the brunt', strenuous:false },
+    ],
+
+    routeDesc: 'Acatenango Volcano, Guatemala · 3,976m (13,044 ft) summit · 1–2 night trek',
+
+    packItems: [
+      { cat:'Layering (critical!)', items:['Thermal base layer top + bottom', 'Fleece mid-layer', 'Puffy insulated jacket (it\'s cold at 3am)', 'Waterproof outer shell', 'Warm hat + gloves + neck gaiter'] },
+      { cat:'Footwear', items:['Waterproof hiking boots (broken in!)', 'Warm wool socks × 3 pairs', 'Gaiters (volcanic ash gets everywhere)'] },
+      { cat:'Gear', items:['Trekking poles (essential on scree)', '35–40L backpack', 'Sleeping bag rated to 20°F or lower', 'Sleeping pad', 'Headlamp + extra batteries (you\'re hiking at 3am!)'] },
+      { cat:'Navigation & Safety', items:['Guide or reputable tour operator (strongly recommended)', 'Offline maps downloaded', 'First aid kit', 'Emergency whistle'] },
+      { cat:'Nutrition & Hydration', items:['3L water capacity', 'Hot drink thermos for summit night', 'High-calorie snacks × lots', 'Energy gels for summit push', 'Electrolyte packets'] },
+      { cat:'Altitude & Wellness', items:['Altitude sickness medication (consult your doctor)', 'Sunscreen SPF 50+ (UV is intense at altitude)', 'Blister kit', 'Ibuprofen', 'Hand warmers × 4+'] },
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVE HIKE STATE
+// ═══════════════════════════════════════════════════════════════
+
+let activeHikeId = localStorage.getItem('active_hike') || 'dolomites';
+let HIKE = HIKE_CONFIGS[activeHikeId];
+let PLAN = [];
+let WORKOUT_PLAN = [];
+let TOTAL_WORKOUTS = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// PLAN BUILDER
+// ═══════════════════════════════════════════════════════════════
+
+function buildPlan(hike) {
+  const plan = [];
+  const { phases, workoutDays, restDays, workoutsByPhase, planStart, totalWeeks } = hike;
+
+  function getPhase(week) {
+    for (const p of phases) {
+      if (week >= p.weeks[0] && week <= p.weeks[1]) return p;
+    }
+    return phases[phases.length - 1];
   }
-  return PHASES[PHASES.length-1];
-}
 
-function buildPlan() {
-  const plan = []; // array of {date, week, dayOfWeek, isRest, title, duration, type, detail, tip}
-
-  const workoutsByPhase = {
-    'Base': [
-      // Mon — already at L5–6, push to L6–7 and extend duration
-      { title:'Stairclimber Push', duration:'45 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Week 1: 35 min at Level 5 (~54 steps/min) — start here and find your groove\n• Week 2: 35 min at Level 5, last 5 min push to Level 6 (~61 steps/min)\n• 5 min cool-down at Level 3\n• No gripping rails — hands lightly resting only\nTarget effort: 6/10 RPE, conversational pace', tip:'Starting at Level 5 lets you build great form and endurance before pushing higher. Upright posture, no rail-gripping — this sets the foundation.' },
-      // Tue
-      { title:'Incline Treadmill Walk', duration:'40 min', type:'Endurance', detail:'• Set treadmill to 10–12% incline\n• Walk at 3.0–3.5 mph the full time\n• No holding the rails — engage your core\nGoal: sustained effort, not speed', tip:'This is your single most hike-specific gym exercise. Prioritize it every week.' },
-      // Thu
-      { title:'Bodyweight Strength', duration:'35 min', type:'Strength', detail:'3 rounds:\n• 15 squats\n• 10 reverse lunges each leg\n• 15 glute bridges\n• 10 step-ups (use bench or box)\n• 30 sec plank\n• 15 calf raises\nRest 60 sec between rounds', tip:'Strong glutes and calves = happy knees on descents. This matters more than cardio.' },
-      // Sat
-      { title:'Outdoor Walk/Hike', duration:'75 min', type:'Long Day', detail:'• Walk at a brisk pace outdoors\n• Find hills wherever possible (Central Park, Fort Tryon, Riverside Park)\n• Goal: 4–5 miles\n• Wear your hiking shoes to break them in', tip:'Wear your hiking shoes to break them in. Your feet will thank you in July.' },
-    ],
-    'Build': [
-      // Mon — Stairclimber intervals, building toward 60 min at L6–7
-      { title:'Stairclimber Intervals', duration:'50 min', type:'Cardio', detail:'• 5 min warm-up at Level 3\n• Weeks 3–4: 6 × (3 min at Level 6 / 2 min at Level 4)\n• Weeks 5–6: 6 × (3 min at Level 7 / 2 min at Level 5)\n• Weeks 7–8: 6 × (5 min at Level 7 / 2 min at Level 5), then 10 min steady at Level 6\n• 5 min cool-down at Level 3\nLevel 6 = ~61 steps/min · Level 7 = ~70 steps/min (hard, short phrases only)\nNo handrail use on work intervals', tip:'Weeks 3–4 at Level 6 let you build interval endurance before pushing to Level 7. Each week adds a little more — trust the progression.' },
-      // Tue
-      { title:'Incline Treadmill — Loaded', duration:'50 min', type:'Endurance', detail:'• 10–15% incline, 3.0–3.5 mph\n• Weeks 3–4: no pack\n• Weeks 5–8: wear hiking pack with 5–8 lbs\n• Focus on heel-to-toe footstrike\n• Optional: 10 min at 0% incline to finish', tip:'Altitude in the Dolomites means less oxygen. Sustained effort now builds your lungs.' },
-      // Thu
-      { title:'Strength + Core', duration:'40 min', type:'Strength', detail:'3 rounds:\n• 12 Bulgarian split squats each leg\n• 15 Romanian deadlifts (moderate weight)\n• 20 step-ups with pack\n• 15 side lunges\n• 1 min plank\n• 20 calf raises (add weight)\nRest 60 sec', tip:'Focus on single-leg stability — this is your knee protection on rocky terrain.' },
-      // Sat
-      { title:'Long Outdoor Walk', duration:'90 min', type:'Long Day', detail:'• 5–7 miles at a hiking pace\n• Use hiking poles if you have them\n• Wear your full hiking outfit + shoes\n• Elevation gain wherever possible\nBonus: Fort Tryon Park, Wave Hill, or NJ Palisades', tip:'Eat a snack during the walk — practice your trail snacking routine for the Dolomites.' },
-    ],
-    'Peak': [
-      // Mon — Stairclimber benchmark: full 60 min at L6–7 with pack
-      { title:'Stairclimber Benchmark', duration:'60 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• Weeks 9–10: 50 min steady at Level 7 (~70 steps/min), no pack\n• Weeks 11–12: 60 min at Level 7 with 10 lb pack — full benchmark!\n• Week 13: 60 min at Level 7–8 with pack (peak effort)\n• 5 min cool-down at Level 3\nLevel 7 for 60 min = ~2,800 vertical ft on machine\nNo handrail use. 7–8/10 RPE.', tip:'This is your hardest training session. Completing 60 min at Level 7 with a pack means you\'re genuinely ready for Segment 2\'s 3,300 ft climb.' },
-      // Tue — back-to-back day
-      { title:'Back-to-Back Day 2 — Incline', duration:'55 min', type:'Endurance', detail:'• Incline treadmill 12–15%, 3.0 mph\n• Wear pack (8–12 lbs)\n• This is your second workout day in a row — that\'s intentional\n• It builds the fatigue resilience you\'ll need on days 2–5 of the hike', tip:'Recovery nutrition matters now. Eat enough protein the night before.' },
-      // Thu
-      { title:'Heavy Strength + Descents', duration:'45 min', type:'Strength', detail:'3 rounds:\n• 10 heavy squats\n• 12 step-downs (step off box slowly — 3 sec eccentric)\n• 15 single-leg glute bridges each side\n• 10 lateral band walks each direction\n• 90 sec plank\n• 20 weighted calf raises\nRest 45 sec', tip:'Eccentric step-downs train your quads for the long descents. Segment 3 drops 1,300 ft.' },
-      // Sat
-      { title:'Long Day — Loaded Hike', duration:'2.5–3 hrs', type:'Long Day', detail:'• 7–9 miles with as much elevation as possible\n• Full pack (10–15 lbs)\n• Eat and drink as you will on the actual hike\n• Target: Palisades, Staten Island Greenbelt, or NJ/CT trails\nThis is your key weekly workout!', tip:'Practice your snack timing: eat every 60–90 min. Your body needs fuel on multi-day hikes.' },
-    ],
-    'Taper': [
-      // Mon — maintain level, cut duration
-      { title:'Easy Stairclimber', duration:'30 min', type:'Cardio', detail:'• 5 min warm-up at Level 4\n• 20 min at Level 7 (~70 steps/min) — same level as peak, shorter duration\n• 5 min cool-down at Level 3\nDo NOT drop the level — just cut the time\nEffort: 6/10 RPE, controlled and smooth', tip:'Taper is not laziness — your body is consolidating all your training gains. Keeping the level up preserves your fitness.' },
-      // Tue
-      { title:'Easy Incline Walk', duration:'35 min', type:'Endurance', detail:'• 8% incline, comfortable pace\n• Light pack (5 lbs max)\n• Keep heart rate moderate\nNo heroics this phase!', tip:'Sleep extra this week. Sleep is your #1 performance enhancer before a big hike.' },
-      // Thu
-      { title:'Light Strength', duration:'30 min', type:'Strength', detail:'2 rounds (reduced volume):\n• 12 squats\n• 10 reverse lunges each side\n• 10 step-ups\n• 45 sec plank\n• 15 calf raises\nNo heavy weights — just maintain movement patterns', tip:'Stretch more than usual this week. Hip flexors, calves, quads, hamstrings.' },
-      // Sat
-      { title:'Short Shakeout Walk', duration:'45–60 min', type:'Long Day', detail:'• Easy 2–3 mile walk outdoors\n• Wear your hiking boots\n• Low intensity, enjoy the movement\n• Review your gear and packing list!', tip:'Last long-ish workout before the hike. Enjoy it — you\'ve earned this.' },
-    ],
-    'Hike!': [
-      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
-      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
-      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
-      { title:'Hike Day!', duration:'You\'re in the Dolomites!', type:'Hike', detail:'Enjoy every step. You\'ve trained for this.', tip:'Trust your training. You\'re ready.' },
-    ],
-  };
-
-  // Workout pattern per week: workout on [0,1,3,5] = Mon,Tue,Thu,Sat; rest on [2,4,6] = Wed,Fri,Sun
-  const WORKOUT_DAYS = [0, 1, 3, 5]; // Mon, Tue, Thu, Sat
-  const REST_DAYS    = [2, 4, 6];
-
-  let workoutIndex = { 'Base':0, 'Build':0, 'Peak':0, 'Taper':0, 'Hike!':0 };
-
-  for (let w = 1; w <= 16; w++) {
+  for (let w = 1; w <= totalWeeks; w++) {
     const phase = getPhase(w);
     const pname = phase.name;
-    const workouts = workoutsByPhase[pname];
+    const workouts = workoutsByPhase[pname] || [];
 
     for (let d = 0; d < 7; d++) {
-      const date = new Date(PLAN_START);
-      date.setDate(PLAN_START.getDate() + (w-1)*7 + d);
+      const date = new Date(planStart);
+      date.setDate(planStart.getDate() + (w - 1) * 7 + d);
 
-      const isRest = REST_DAYS.includes(d);
+      const isRest = restDays.includes(d);
       let entry = { date, week: w, dayOfWeek: d, phase: pname, phaseColor: phase.color, isRest };
 
       if (!isRest && pname !== 'Hike!') {
-        const wIdx = WORKOUT_DAYS.indexOf(d);
+        const wIdx = workoutDays.indexOf(d);
         const workout = workouts[wIdx % workouts.length];
-        // In peak phase, make Tue a "back-to-back" day
-        Object.assign(entry, workout);
-        if (pname === 'Build' || pname === 'Peak') {
-          // Scale duration slightly with week
-          entry.duration = workout.duration;
-        }
+        if (workout) Object.assign(entry, workout);
       } else if (!isRest && pname === 'Hike!') {
         const workout = workouts[0];
-        Object.assign(entry, workout);
+        if (workout) Object.assign(entry, workout);
       } else {
         entry.title = 'Rest Day';
         entry.detail = 'Active recovery: gentle walk, stretching, or yoga.\nFoam roll your calves, quads, and IT band.';
@@ -602,17 +761,29 @@ function buildPlan() {
   return plan;
 }
 
-const PLAN = buildPlan();
-const WORKOUT_PLAN = PLAN.filter(d => !d.isRest);
-const TOTAL_WORKOUTS = WORKOUT_PLAN.length;
+function getPhase(week) {
+  for (const p of HIKE.phases) {
+    if (week >= p.weeks[0] && week <= p.weeks[1]) return p;
+  }
+  return HIKE.phases[HIKE.phases.length - 1];
+}
 
-// ─── LOCAL STORAGE ────────────────────────────────────────────────
+function initPlan() {
+  PLAN = buildPlan(HIKE);
+  WORKOUT_PLAN = PLAN.filter(d => !d.isRest);
+  TOTAL_WORKOUTS = WORKOUT_PLAN.length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOCAL STORAGE (per hike)
+// ═══════════════════════════════════════════════════════════════
+
 function getCompleted() {
-  try { return JSON.parse(localStorage.getItem('dolo_completed') || '[]'); }
+  try { return JSON.parse(localStorage.getItem(HIKE.storageKey) || '[]'); }
   catch { return []; }
 }
 function setCompleted(arr) {
-  localStorage.setItem('dolo_completed', JSON.stringify(arr));
+  localStorage.setItem(HIKE.storageKey, JSON.stringify(arr));
 }
 function toggleDay(dateStr) {
   const arr = getCompleted();
@@ -628,7 +799,10 @@ function dateKey(d) {
   return d.toISOString().split('T')[0];
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+
 const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAY_NAMES_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -647,28 +821,98 @@ function getDayEntry(date) {
 function getTodayEntry() {
   return getDayEntry(today());
 }
-
 function typeColor(type) {
   const map = { 'Cardio':'#4895ef', 'Endurance':'#52b788', 'Strength':'#e76f51', 'Long Day':'#f4a261', 'Rest':'#adb5bd', 'Hike':'#2d6a4f' };
   return map[type] || '#adb5bd';
 }
 
-// ─── COUNTDOWN ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// HIKE SWITCHER
+// ═══════════════════════════════════════════════════════════════
+
+function toggleDropdown() {
+  document.getElementById('hike-dropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = document.querySelector('.hike-selector-wrap');
+  if (!wrap.contains(e.target)) {
+    document.getElementById('hike-dropdown').classList.remove('open');
+  }
+});
+
+function switchHike(hikeId) {
+  if (hikeId === activeHikeId) {
+    document.getElementById('hike-dropdown').classList.remove('open');
+    return;
+  }
+
+  activeHikeId = hikeId;
+  localStorage.setItem('active_hike', hikeId);
+  HIKE = HIKE_CONFIGS[hikeId];
+  initPlan();
+
+  // Update header
+  const header = document.getElementById('main-header');
+  header.className = 'header ' + HIKE.headerClass;
+  document.getElementById('header-title').textContent = HIKE.name;
+  document.getElementById('header-sub').textContent = HIKE.subtitle;
+  document.getElementById('selector-label').textContent =
+    hikeId === 'dolomites' ? 'Dolomites — Alta Via 1' : 'Acatenango — Summit Trek';
+
+  // Update active option styling
+  document.querySelectorAll('.hike-option').forEach(el => el.classList.remove('active'));
+  document.getElementById('opt-' + hikeId).classList.add('active');
+
+  document.getElementById('hike-dropdown').classList.remove('open');
+
+  // Re-render everything
+  updateCountdown();
+  renderToday();
+  renderProgress();
+  renderPlan();
+  renderHike();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════════════════
+
 function updateCountdown() {
   const now = today();
-  const diff = Math.ceil((HIKE_DATE - now) / (1000*60*60*24));
+  const diff = Math.ceil((HIKE.hikeDate - now) / (1000*60*60*24));
   document.getElementById('cd-days').textContent = Math.max(0, diff);
   document.getElementById('cd-weeks').textContent = Math.max(0, Math.ceil(diff/7));
   document.getElementById('cd-workouts').textContent = getCompleted().length;
 }
 
-// ─── TODAY PAGE ──────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// TODAY PAGE
+// ═══════════════════════════════════════════════════════════════
+
 function renderToday() {
   const entry = getTodayEntry();
   const container = document.getElementById('today-content');
 
   if (!entry) {
-    container.innerHTML = `<div class="card rest-card"><div class="rest-icon">🏔️</div><div class="rest-title">Training Complete!</div><div class="rest-sub">See you in the Dolomites!</div></div>`;
+    const t = today();
+    // Before plan starts
+    if (t < HIKE.planStart) {
+      const daysUntil = Math.ceil((HIKE.planStart - t) / (1000*60*60*24));
+      const emoji = HIKE.id === 'acatenango' ? '🌋' : '🏔️';
+      const startLabel = `${MONTH_NAMES[HIKE.planStart.getMonth()]} ${HIKE.planStart.getDate()}`;
+      container.innerHTML = `
+        <div class="card rest-card">
+          <div class="rest-icon">${emoji}</div>
+          <div class="rest-title">Plan starts in ${daysUntil} day${daysUntil === 1 ? '' : 's'}!</div>
+          <div class="rest-sub">Your training kicks off ${startLabel} — check the Full Plan tab to see what's coming.</div>
+        </div>`;
+      return;
+    }
+    // After plan ends
+    const emoji = HIKE.id === 'acatenango' ? '🌋' : '🏔️';
+    const msg = HIKE.id === 'acatenango' ? 'See you on the volcano!' : 'See you in the Dolomites!';
+    container.innerHTML = `<div class="card rest-card"><div class="rest-icon">${emoji}</div><div class="rest-title">Training Complete!</div><div class="rest-sub">${msg}</div></div>`;
     return;
   }
 
@@ -725,8 +969,7 @@ function renderMiniWeek(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const t = today();
-  // Find Monday of current week
-  const dow = (t.getDay() + 6) % 7; // 0=Mon
+  const dow = (t.getDay() + 6) % 7;
   const monday = new Date(t); monday.setDate(t.getDate() - dow);
 
   let html = '';
@@ -753,14 +996,16 @@ function renderMiniWeek(containerId) {
   container.innerHTML = html;
 }
 
-// ─── PROGRESS PAGE ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// PROGRESS PAGE
+// ═══════════════════════════════════════════════════════════════
+
 function renderProgress() {
   const completed = getCompleted();
   const totalWorkouts = WORKOUT_PLAN.length;
   const doneCount = completed.filter(k => WORKOUT_PLAN.some(d => dateKey(d.date) === k)).length;
   const pct = totalWorkouts > 0 ? Math.round(doneCount / totalWorkouts * 100) : 0;
 
-  // This week count
   const t = today();
   const dow = (t.getDay() + 6) % 7;
   const monday = new Date(t); monday.setDate(t.getDate() - dow);
@@ -770,7 +1015,6 @@ function renderProgress() {
     if (isCompleted(dateKey(d)) && getDayEntry(d) && !getDayEntry(d).isRest) weekDone++;
   }
 
-  // Streak
   let streak = 0;
   let check = new Date(t);
   while (true) {
@@ -788,16 +1032,14 @@ function renderProgress() {
   document.getElementById('prog-label').textContent = `${doneCount} / ${totalWorkouts} workouts`;
   document.getElementById('prog-fill').style.width = pct + '%';
 
-  // Week strip
   renderMiniWeek('week-strip');
 
-  // Phase list
   const phaseEl = document.getElementById('phase-list');
   let phaseHTML = '';
   const currentPhase = getTodayEntry()?.phase || '';
-  for (const p of PHASES) {
-    const startDate = new Date(PLAN_START); startDate.setDate(PLAN_START.getDate() + (p.weeks[0]-1)*7);
-    const endDate   = new Date(PLAN_START); endDate.setDate(PLAN_START.getDate() + p.weeks[1]*7 - 1);
+  for (const p of HIKE.phases) {
+    const startDate = new Date(HIKE.planStart); startDate.setDate(HIKE.planStart.getDate() + (p.weeks[0]-1)*7);
+    const endDate   = new Date(HIKE.planStart); endDate.setDate(HIKE.planStart.getDate() + p.weeks[1]*7 - 1);
     const pWorkouts = WORKOUT_PLAN.filter(d => d.phase === p.name);
     const pDone = pWorkouts.filter(d => isCompleted(dateKey(d.date))).length;
     const isCurrent = p.name === currentPhase;
@@ -826,15 +1068,18 @@ function renderProgress() {
   phaseEl.innerHTML = phaseHTML;
 }
 
-// ─── PLAN PAGE ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// PLAN PAGE
+// ═══════════════════════════════════════════════════════════════
+
 function renderPlan() {
   const container = document.getElementById('plan-content');
   const t = today();
   let html = '';
 
-  for (let w = 1; w <= 16; w++) {
+  for (let w = 1; w <= HIKE.totalWeeks; w++) {
     const phase = getPhase(w);
-    const startDate = new Date(PLAN_START); startDate.setDate(PLAN_START.getDate() + (w-1)*7);
+    const startDate = new Date(HIKE.planStart); startDate.setDate(HIKE.planStart.getDate() + (w-1)*7);
     const endDate   = new Date(startDate); endDate.setDate(startDate.getDate() + 6);
     const sm = MONTH_NAMES[startDate.getMonth()]; const em = MONTH_NAMES[endDate.getMonth()];
     const dateStr = `${sm} ${startDate.getDate()} – ${em} ${endDate.getDate()}`;
@@ -878,28 +1123,22 @@ function toggleWeek(w) {
   ch.classList.toggle('open');
 }
 
-// ─── HIKE PAGE ───────────────────────────────────────────────────
-const SEGMENTS = [
-  { name:'Lago di Braies → Rifugio Sennes', day:'Day 1 · Jun 29', dist:'7.5 mi', up:'~2,700 ft', down:'~900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Cool mornings; afternoon clouds; chance of rain', strenuous:false },
-  { name:'Rifugio Sennes → Rifugio Fanes', day:'Day 2 · Jun 30', dist:'6.8 mi', up:'~1,800 ft', down:'~1,900 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Similar alpine pattern; storms possible after noon', strenuous:false },
-  { name:'Rifugio Fanes → Rifugio Lagazuoi', day:'Day 3 · Jul 1', dist:'9.0 mi', up:'~3,300 ft', down:'~1,300 ft', time:'6–7 hrs', diff:'Strenuous', conditions:'Cooler at altitude; wind + afternoon storms', strenuous:true },
-  { name:'Rifugio Lagazuoi → Rifugio Averau', day:'Day 4 · Jul 2', dist:'6.5 mi', up:'~2,300 ft', down:'~2,400 ft', time:'5–6 hrs', diff:'Moderate', conditions:'Morning sun; clouds later; short storms common', strenuous:false },
-  { name:'Rifugio Averau → Rifugio Staulanza', day:'Day 5 · Jul 3', dist:'8.5 mi', up:'~1,150 ft', down:'~2,950 ft', time:'5–7 hrs', diff:'Moderate', conditions:'Warmer lower down; storms still possible', strenuous:false },
-];
-
-const PACK_ITEMS = [
-  { cat:'Footwear', items:['Waterproof hiking boots (broken in!)', 'Wool or synthetic hiking socks × 3', 'Camp sandals or flip-flops'] },
-  { cat:'Clothing', items:['Moisture-wicking base layer × 2', 'Fleece or down mid-layer', 'Waterproof rain jacket', 'Convertible pants or hiking shorts', 'Sun hat + warm beanie'] },
-  { cat:'Navigation & Safety', items:['Downloaded offline maps (Maps.me or AllTrails)', 'Small first aid kit', 'Emergency whistle', 'Headlamp + extra batteries'] },
-  { cat:'Gear', items:['Trekking poles (highly recommended!)', '35–40L backpack', 'Sleeping bag liner (rifugio sheets can be thin)', 'Sunglasses (UV-rated)'] },
-  { cat:'Nutrition & Hydration', items:['2L water capacity (bottles or reservoir)', 'Water purification tabs (backup)', 'High-calorie trail snacks', 'Electrolyte packets'] },
-  { cat:'Wellness', items:['Sunscreen SPF 50+', 'Blister kit (moleskin, Compeed)', 'Ibuprofen + any personal meds', 'Hand sanitizer'] },
-];
+// ═══════════════════════════════════════════════════════════════
+// HIKE PAGE
+// ═══════════════════════════════════════════════════════════════
 
 function renderHike() {
+  document.getElementById('hike-route-desc').textContent = HIKE.routeDesc;
+
   const segEl = document.getElementById('hike-segments');
   let html = '';
-  for (const s of SEGMENTS) {
+
+  // Altitude warning for Acatenango
+  if (HIKE.id === 'acatenango') {
+    html += `<div class="altitude-badge">⚠️ Summit: 13,044 ft (3,976m) — altitude awareness required</div>`;
+  }
+
+  for (const s of HIKE.segments) {
     html += `<div class="seg-card ${s.strenuous ? 'strenuous' : ''}">
       <div class="seg-title">${s.strenuous ? '⚠️ ' : ''}${s.name}</div>
       <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">${s.day}</div>
@@ -917,11 +1156,12 @@ function renderHike() {
 
   const packEl = document.getElementById('pack-list');
   let pHtml = '';
-  for (const cat of PACK_ITEMS) {
+  const packPrefix = HIKE.id; // unique key prefix per hike
+  for (const cat of HIKE.packItems) {
     pHtml += `<div style="margin-bottom:12px;">
       <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">${cat.cat}</div>`;
     for (const item of cat.items) {
-      const key = 'pack_' + item.replace(/\s/g,'_');
+      const key = 'pack_' + packPrefix + '_' + item.replace(/\s/g,'_');
       const checked = localStorage.getItem(key) === '1';
       pHtml += `<label style="display:flex;align-items:center;gap:10px;font-size:13px;padding:5px 0;cursor:pointer;">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePack('${key}', this)" style="width:16px;height:16px;accent-color:var(--green);">
@@ -940,7 +1180,10 @@ function togglePack(key, el) {
   span.style.color = el.checked ? 'var(--gray)' : '';
 }
 
-// ─── MODAL ───────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════
+
 function openDayModal(key) {
   const date = new Date(key + 'T00:00:00');
   const entry = getDayEntry(date);
@@ -948,7 +1191,7 @@ function openDayModal(key) {
 
   const done = isCompleted(key);
   const dayName = DAY_NAMES_FULL[entry.dayOfWeek];
-  const dateLabel = `${MONTH_NAMES[entry.date.getMonth()]} ${entry.date.getDate()}, 2026`;
+  const dateLabel = `${MONTH_NAMES[entry.date.getMonth()]} ${entry.date.getDate()}, ${entry.date.getFullYear()}`;
 
   let body;
   if (entry.isRest) {
@@ -995,7 +1238,10 @@ function closeModal(e) {
   }
 }
 
-// ─── NAV ─────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════════
+
 function showPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1003,7 +1249,21 @@ function showPage(name, btn) {
   btn.classList.add('active');
 }
 
-// ─── INIT ────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+// Apply saved hike on load
+if (activeHikeId === 'acatenango') {
+  document.getElementById('main-header').className = 'header acatenango';
+  document.getElementById('header-title').textContent = HIKE.name;
+  document.getElementById('header-sub').textContent = HIKE.subtitle;
+  document.getElementById('selector-label').textContent = 'Acatenango — Summit Trek';
+  document.getElementById('opt-dolomites').classList.remove('active');
+  document.getElementById('opt-acatenango').classList.add('active');
+}
+
+initPlan();
 updateCountdown();
 renderToday();
 renderProgress();
