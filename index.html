@@ -511,7 +511,14 @@
   </div>
 
   <div class="card">
-    <div class="card-title">This Week</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <button onclick="shiftWeek(-1)" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--green);padding:0 4px;">‹</button>
+      <div style="text-align:center;">
+        <div class="card-title" style="margin-bottom:0;" id="week-strip-label">This Week</div>
+        <div id="week-strip-dates" style="font-size:11px;color:var(--gray);margin-top:2px;"></div>
+      </div>
+      <button onclick="shiftWeek(1)" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--green);padding:0 4px;">›</button>
+    </div>
     <div class="week-strip" id="week-strip"></div>
   </div>
 
@@ -968,12 +975,30 @@ function toggleWorkout(key) {
   renderProgress();
 }
 
-function renderMiniWeek(containerId) {
+let weekOffset = 0;
+
+function shiftWeek(dir) {
+  weekOffset += dir;
+  renderMiniWeek('week-strip', weekOffset);
+}
+
+function renderMiniWeek(containerId, offset) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  offset = offset || 0;
   const t = today();
   const dow = (t.getDay() + 6) % 7;
-  const monday = new Date(t); monday.setDate(t.getDate() - dow);
+  const monday = new Date(t);
+  monday.setDate(t.getDate() - dow + offset * 7);
+
+  // Update label and date range (only for the progress strip)
+  const labelEl = document.getElementById('week-strip-label');
+  const datesEl = document.getElementById('week-strip-dates');
+  if (labelEl && containerId === 'week-strip') {
+    labelEl.textContent = offset === 0 ? 'This Week' : offset === -1 ? 'Last Week' : offset === 1 ? 'Next Week' : `Week of ${MONTH_NAMES[monday.getMonth()]} ${monday.getDate()}`;
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+    datesEl.textContent = `${MONTH_NAMES[monday.getMonth()]} ${monday.getDate()} – ${MONTH_NAMES[sunday.getMonth()]} ${sunday.getDate()}`;
+  }
 
   let html = '';
   for (let i = 0; i < 7; i++) {
@@ -1035,7 +1060,7 @@ function renderProgress() {
   document.getElementById('prog-label').textContent = `${doneCount} / ${totalWorkouts} workouts`;
   document.getElementById('prog-fill').style.width = pct + '%';
 
-  renderMiniWeek('week-strip');
+  renderMiniWeek('week-strip', weekOffset);
 
   const phaseEl = document.getElementById('phase-list');
   let phaseHTML = '';
