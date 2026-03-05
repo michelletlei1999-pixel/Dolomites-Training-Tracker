@@ -152,7 +152,7 @@
 
   /* PAGES */
   .page { display: none; padding: 16px; }
-  .page.active { display: block; }
+  .page.active { display: block; min-height: var(--page-min-h, 60vh); }
 
   /* CARDS */
   .card {
@@ -888,6 +888,14 @@ function switchHike(hikeId) {
 // COUNTDOWN
 // ═══════════════════════════════════════════════════════════════
 
+function updatePageMinHeight() {
+  const header = document.getElementById('main-header');
+  const nav = document.querySelector('.nav');
+  if (!header || !nav) return;
+  const available = window.innerHeight - header.offsetHeight - nav.offsetHeight;
+  document.documentElement.style.setProperty('--page-min-h', available + 'px');
+}
+
 function updateCountdown() {
   const now = today();
   const diff = Math.ceil((HIKE.hikeDate - now) / (1000*60*60*24));
@@ -1302,6 +1310,8 @@ renderToday();
 renderProgress();
 renderPlan();
 renderHike();
+updatePageMinHeight();
+window.addEventListener('resize', updatePageMinHeight);
 </script>
 </body>
 </html>
