@@ -937,7 +937,12 @@ function renderToday() {
         <div class="rest-sub">Week ${entry.week} · ${DAY_NAMES_FULL[entry.dayOfWeek]}</div>
         <div style="margin-top:14px;font-size:13px;color:var(--gray);line-height:1.6;">${entry.detail.replace(/\n/g,'<br>')}</div>
         <div class="tip-box" style="margin-top:12px;"><strong>💡 Tip</strong>${entry.tip}</div>
+      </div>
+      <div class="card" style="padding:14px 16px;">
+        <div class="card-title">This Week</div>
+        <div class="week-strip" id="today-week-strip"></div>
       </div>`;
+    renderMiniWeek('today-week-strip');
     return;
   }
 
