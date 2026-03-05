@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head><title>Icon Generator</title></head>
+<body style="font-family:sans-serif; padding:20px; text-align:center;">
+<h2>Trail Training Icon Generator</h2>
+<canvas id="c" width="512" height="512" style="border:1px solid #ccc; width:256px; height:256px;"></canvas>
+<br><br>
+<button onclick="download()" style="padding:12px 24px; font-size:16px; background:#4895ef; color:white; border:none; border-radius:8px; cursor:pointer;">
+  Download icon.png
+</button>
+<p style="color:#666; font-size:14px;">Click download, then replace the icon.png in your Training-Tracker folder and re-upload to GitHub.</p>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+const W = 512, H = 512;
+
+// Light blue background gradient
+const bg = ctx.createLinearGradient(0, 0, 0, H);
+bg.addColorStop(0, '#caf0f8');
+bg.addColorStop(1, '#90e0ef');
+ctx.fillStyle = bg;
+ctx.fillRect(0, 0, W, H);
+
+// Stars
+const stars = [[80,70,3],[420,55,2.5],[370,110,2],[50,140,1.5],[460,170,2],[150,40,2],[300,80,1.5],[480,90,2]];
+ctx.fillStyle = 'rgba(255,255,255,0.9)';
+stars.forEach(([x,y,r]) => { ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
+
+// Background left mountain
+ctx.beginPath();
+ctx.moveTo(30, 400);
+ctx.lineTo(180, 200);
+ctx.lineTo(290, 370);
+ctx.closePath();
+ctx.fillStyle = '#48cae4';
+ctx.fill();
+
+// Background right mountain
+ctx.beginPath();
+ctx.moveTo(260, 370);
+ctx.lineTo(390, 180);
+ctx.lineTo(490, 370);
+ctx.closePath();
+ctx.fillStyle = '#0096c7';
+ctx.fill();
+
+// Main center mountain
+ctx.beginPath();
+ctx.moveTo(20, 430);
+ctx.lineTo(256, 80);
+ctx.lineTo(492, 430);
+ctx.closePath();
+const mtGrad = ctx.createLinearGradient(100, 150, 400, 430);
+mtGrad.addColorStop(0, '#0077b6');
+mtGrad.addColorStop(1, '#023e8a');
+ctx.fillStyle = mtGrad;
+ctx.fill();
+
+// Snow cap on main mountain
+ctx.beginPath();
+ctx.moveTo(256, 80);
+ctx.lineTo(316, 195);
+ctx.lineTo(196, 195);
+ctx.closePath();
+ctx.fillStyle = 'white';
+ctx.fill();
+
+// Snow shadow
+ctx.beginPath();
+ctx.moveTo(256, 80);
+ctx.lineTo(316, 195);
+ctx.lineTo(260, 165);
+ctx.closePath();
+ctx.fillStyle = 'rgba(0,0,0,0.08)';
+ctx.fill();
+
+// Ground
+const groundGrad = ctx.createLinearGradient(0, 400, 0, 512);
+groundGrad.addColorStop(0, '#023e8a');
+groundGrad.addColorStop(1, '#03045e');
+ctx.fillStyle = groundGrad;
+ctx.fillRect(0, 400, W, 112);
+
+function download() {
+  const a = document.createElement('a');
+  a.download = 'icon.png';
+  a.href = c.toDataURL('image/png');
+  a.click();
+}
+window.onload = () => setTimeout(download, 500);
+</script>
+</body>
+</html>
